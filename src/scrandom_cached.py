@@ -97,11 +97,7 @@ def get_random_card(cards, silent=False):
     return x
 
 
-def main():
-    """The main entrypoint to the program."""
-    # bulk.fetch()
-    # bulk.fetch_all_commanders()
-    # initialize_all_color_sets()
+def generate_commander_deck():
     commander = get_random_commander()
     color_identity = commander["color_identity"]
     cards = get_color_set(color_identity)
@@ -115,11 +111,24 @@ def main():
         if card not in nonlands:
             nonlands.append(card["name"])
     deck = nonlands + lands
-    deck_name = clean_name(commander["name"])
-    with open(f"{DIRECTORY}/../{deck_name}.txt", "w") as outfile:
+    return deck
+
+
+def save_deckfile(deck, name):
+    with open(f"{DIRECTORY}/../{name}.txt", "w") as outfile:
         print("Writing to file...")
         outfile.write("\n".join(str(i) for i in deck))
         print("Successfully written to file.")
+
+
+def main():
+    """The main entrypoint to the program."""
+    # bulk.fetch()
+    # bulk.fetch_all_commanders()
+    # initialize_all_color_sets()
+    deck = generate_commander_deck()
+    deck_name = clean_name(deck[0])
+    save_deckfile(deck, deck_name)
 
 
 if __name__ == "__main__":
