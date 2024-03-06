@@ -14,8 +14,8 @@ if getattr(sys, 'frozen', False):
     # path into variable _MEIPASS'.
     application_path = sys._MEIPASS
 else:
-    application_path = Path(os.path.dirname(os.path.abspath(__file__)))
-
+    application_path = os.path.dirname(os.path.abspath(__file__))
+application_path = Path(application_path)
 TYPE = "oracle-cards"
 TODAY = datetime.today().strftime("%Y%m%d")
 
