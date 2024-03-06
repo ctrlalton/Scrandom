@@ -29,4 +29,4 @@
             automatic_release_tag: "latest"
             title: "Build"
             files: |
-              dist/scrandom/
+              dist/scrandom/*.exe
