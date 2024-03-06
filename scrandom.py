@@ -88,7 +88,7 @@ def get_data_if_none_exists(filename, uri, func, force=False):
     ):
         print(f"Up-to-date data already exists. ({filename})")
         return 0
-    data = [i for i in func(uri) if i["legalities"]["commander"] == "legal"]
+    data = [i for i in func(uri) if i["legalities"]["commander"] == "legal" and ("Attraction" not in i["type_line"] and "Stickers" not in i["type_line"])]
     write_to_json(data, filename)
     return 1
 
