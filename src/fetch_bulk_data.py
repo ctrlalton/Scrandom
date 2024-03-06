@@ -51,7 +51,9 @@ def clear_old_files(force=False):
     ensure_dir_exists()
     with os.scandir(DIRECTORY) as it:
         for entry in it:
-            if entry.name != "README.md" and (force or entry.name.split("_")[1].split(".")[0] != TODAY):
+            if entry.name != "README.md" and (
+                force or entry.name.split("_")[1].split(".")[0] != TODAY
+            ):
                 os.remove(entry)
 
 
