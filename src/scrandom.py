@@ -184,15 +184,17 @@ def create_deckstring(deck):
 
 
 def save_deckfile(deckstring, name):
-    filepath = f"{DIRECTORY}/../{name}.txt"
+    filepath = (DIRECTORY / f"../{name}.txt").resolve()
     with open(filepath, "w") as outfile:
         print(f"Writing to {filepath}...")
         outfile.write(deckstring)
         print("Successfully written to file.")
 
+
 def initialize(force=False):
     fetch(force)
     fetch_all_commanders(force)
+
 
 def main():
     """The main entrypoint to the program."""
