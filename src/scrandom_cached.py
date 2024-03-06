@@ -49,23 +49,7 @@ def get_random_commander(color_identity=None, silent=False):
     return x
 
 
-def identity_to_color_string(color_identity):
-    color_string = "colorless"
-    for i in color_identity:
-        color_string += f"-{i}"
-    return color_string
-
-
 def get_color_set(color_identity):
-    color_string = identity_to_color_string(color_identity)
-
-    filename = get_file_name(color_string)
-    # Test if color-file already exists and read it
-    if filename is not None:
-        print(f"{filename} already exists, moving on...")
-        filepath = f"{DIRECTORY}/{filename}"
-        return bulk.open_json(filepath)
-    # Otherwise create a new color-file
     filename = get_file_name("oracle-cards")
     filepath = f"{DIRECTORY}/{filename}"
     cards = bulk.open_json(filepath)
@@ -75,18 +59,7 @@ def get_color_set(color_identity):
         if set(i["color_identity"]) <= set(color_identity)
         and i["legalities"]["commander"] == "legal"
     ]
-    bulk.write_to_json(cards, color_string)
     return cards
-
-
-def initialize_all_color_sets():
-    filename = get_file_name("oracle-cards")
-    filepath = f"{DIRECTORY}/{filename}"
-    cards = bulk.open_json(filepath)
-    color_set_list = set([tuple(i["color_identity"]) for i in cards])
-    for i in color_set_list:
-        get_color_set(i)
-    print("Finished initializing all color sets.")
 
 
 def get_random_card(cards, silent=False):
