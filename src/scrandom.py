@@ -189,12 +189,13 @@ def save_deckfile(deckstring, name):
         outfile.write(deckstring)
         print("Successfully written to file.")
 
+def initialize(force=False):
+    fetch(force)
+    fetch_all_commanders(force)
 
 def main():
     """The main entrypoint to the program."""
-    # fetch()
-    # fetch_all_commanders()
-    # initialize_all_color_sets()
+    initialize()
     deck = generate_commander_deck()
     deck_name = clean_name(deck[0])
     save_deckfile(create_deckstring(deck), deck_name)
