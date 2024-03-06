@@ -14,6 +14,7 @@ MOD_PATH = Path(__file__).parent
 REL_PATH = "../output/bulk_data"
 DIRECTORY = (MOD_PATH / REL_PATH).resolve()
 
+
 def get_download_uri():
     print("Fetching download URI...")
     x = requests.get(f"https://api.scryfall.com/bulk-data/{TYPE}").json()[
@@ -195,6 +196,7 @@ def initialize(force=False):
 
 def main():
     """The main entrypoint to the program."""
+    print(DIRECTORY)
     initialize()
     deck = generate_commander_deck()
     deck_name = clean_name(deck[0])
