@@ -11,9 +11,9 @@
   
       steps:
         - name: Checkout
-          uses: actions/checkout@latest
+          uses: actions/checkout@v3
         - name: Install Python
-          uses: actions/setup-python@latest
+          uses: actions/setup-python@v4
           with:
             python-version: '3.11'
         - name: Install requirements
