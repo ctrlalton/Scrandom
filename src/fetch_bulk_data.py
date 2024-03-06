@@ -10,7 +10,7 @@ CWD = Path.cwd()
 MOD_PATH = Path(__file__).parent
 REL_PATH = "../output/bulk_data"
 DIRECTORY = (MOD_PATH / REL_PATH).resolve()
-TODAY = datetime.today().strftime('%Y%m%d')
+TODAY = datetime.today().strftime("%Y%m%d")
 
 
 def get_download_uri():
@@ -36,9 +36,11 @@ def write_to_json(file, name):
         outfile.write(json.dumps(file))
     print(f"Successfully saved file to '{filepath}'.")
 
+
 def open_json(filepath):
     with open(filepath) as infile:
         return json.load(infile)
+
 
 def ensure_dir_exists():
     if not os.path.isdir(DIRECTORY):
@@ -49,7 +51,7 @@ def clear_old_files(force=False):
     ensure_dir_exists()
     with os.scandir(DIRECTORY) as it:
         for entry in it:
-            if force or entry.name.split("_")[1].split(".")[0] != TODAY:
+            if entry.name != "README.md" and (force or entry.name.split("_")[1].split(".")[0] != TODAY):
                 os.remove(entry)
 
 
@@ -70,7 +72,10 @@ def paginate(uri):
 
 
 def get_data_if_none_exists(filename, uri, func, force=False):
-    if filename in [i.name.split("_")[0] for i in os.scandir(DIRECTORY)] and force is False:
+    if (
+        filename in [i.name.split("_")[0] for i in os.scandir(DIRECTORY)]
+        and force is False
+    ):
         print(f"Up-to-date data already exists. ({filename})")
         return 0
     data = func(uri)

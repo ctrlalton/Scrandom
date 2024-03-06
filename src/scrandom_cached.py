@@ -31,7 +31,11 @@ def clean_name(name):
     return clean_name
 
 
-def get_random_commander(color_identity=None):
+def deck_add_message(card_type, name):
+    print(f'{card_type}:\tAdding "{name}" to your deck...'.expandtabs(25))
+
+
+def get_random_commander(color_identity=None, silent=False):
     filename = get_file_name("all-commanders")
     filepath = f"{DIRECTORY}/{filename}"
     commanders = bulk.open_json(filepath)
@@ -39,7 +43,10 @@ def get_random_commander(color_identity=None):
         commanders = [
             i for i in commanders if set(i["color_identity"]) == set(color_identity)
         ]
-    return random.choice(commanders)
+    x = random.choice(commanders)
+    if not silent:
+        deck_add_message("COMMANDER", x["name"])
+    return x
 
 
 def identity_to_color_string(color_identity):
@@ -48,21 +55,29 @@ def identity_to_color_string(color_identity):
         color_string += f"-{i}"
     return color_string
 
+
 def get_color_set(color_identity):
     color_string = identity_to_color_string(color_identity)
-    
+
     filename = get_file_name(color_string)
     # Test if color-file already exists and read it
     if filename is not None:
+        print(f"{filename} already exists, moving on...")
         filepath = f"{DIRECTORY}/{filename}"
         return bulk.open_json(filepath)
     # Otherwise create a new color-file
     filename = get_file_name("oracle-cards")
     filepath = f"{DIRECTORY}/{filename}"
     cards = bulk.open_json(filepath)
-    cards = [i for i in cards if set(i["color_identity"]) <= set(color_identity) and i["legalities"]["commander"] == "legal"]
-    bulk.write_to_json(cards,color_string)
+    cards = [
+        i
+        for i in cards
+        if set(i["color_identity"]) <= set(color_identity)
+        and i["legalities"]["commander"] == "legal"
+    ]
+    bulk.write_to_json(cards, color_string)
     return cards
+
 
 def initialize_all_color_sets():
     filename = get_file_name("oracle-cards")
@@ -73,8 +88,14 @@ def initialize_all_color_sets():
         get_color_set(i)
     print("Finished initializing all color sets.")
 
-def get_random_card(cards):
-    return random.choice(cards)
+
+def get_random_card(cards, silent=False):
+    x = random.choice(cards)
+    typex = x["type_line"].split("—")[0].strip()
+    if not silent:
+        deck_add_message(typex, x["name"])
+    return x
+
 
 def main():
     """The main entrypoint to the program."""
@@ -99,7 +120,6 @@ def main():
         print("Writing to file...")
         outfile.write("\n".join(str(i) for i in deck))
         print("Successfully written to file.")
-
 
 
 if __name__ == "__main__":
