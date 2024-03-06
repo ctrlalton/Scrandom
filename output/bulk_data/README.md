@@ -1,0 +1,1 @@
+Storage for cached bulk data to avoid making excess requests to Scryfall.
