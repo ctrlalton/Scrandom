@@ -1,18 +1,26 @@
 import requests
 import json
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 import time
 import re
 import random
 
+if getattr(sys, 'frozen', False):
+    # If the application is run as a bundle, the PyInstaller bootloader
+    # extends the sys module by a flag frozen=True and sets the app 
+    # path into variable _MEIPASS'.
+    application_path = sys._MEIPASS
+else:
+    application_path = Path(os.path.dirname(os.path.abspath(__file__)))
+
 TYPE = "oracle-cards"
 TODAY = datetime.today().strftime("%Y%m%d")
 
-MOD_PATH = Path(__file__).parent
-REL_PATH = "../output/bulk_data"
-DIRECTORY = (MOD_PATH / REL_PATH).resolve()
+REL_PATH = "output/bulk_data"
+DIRECTORY = (application_path / REL_PATH).resolve()
 
 
 def get_download_uri():
