@@ -1,8 +1,11 @@
 import asyncio
 import aiohttp
-from aioscryfall.api.cards import UniqueMode
 from aioscryfall.client import ScryfallClient
+from pathlib import Path
 
+MOD_PATH = Path(__file__).parent
+REL_PATH = "../output"
+DIRECTORY = (MOD_PATH / REL_PATH).resolve()
 NONLAND = 68
 DEFAULT_FILTERS = [
     "legal:commander",
@@ -66,10 +69,12 @@ async def main():
         if x.name not in nonlands:
             nonlands.append(x.name)
     deck = nonlands + lands
-    with open("output.txt", "w") as outfile:
+    safe_commander_name = commander.name.replace(" // ","|").replace(" ","-")
+    with open(f"{DIRECTORY}/output.txt", "w") as outfile:
         print("Writing to file...")
         outfile.write("\n".join(str(i) for i in deck))
         print("Successfully written to file.")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
