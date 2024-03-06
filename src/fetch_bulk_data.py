@@ -47,12 +47,13 @@ def ensure_dir_exists():
         os.makedirs(DIRECTORY)
 
 
-def clear_old_files(force=False):
+def clear_old_files(filename, force=False):
     ensure_dir_exists()
     with os.scandir(DIRECTORY) as it:
         for entry in it:
             if entry.name != "README.md" and (
-                force or entry.name.split("_")[1].split(".")[0] != TODAY
+                entry.name.split("_")[0] == filename
+                and (force or entry.name.split("_")[1].split(".")[0] != TODAY)
             ):
                 os.remove(entry)
 
@@ -80,7 +81,7 @@ def get_data_if_none_exists(filename, uri, func, force=False):
     ):
         print(f"Up-to-date data already exists. ({filename})")
         return 0
-    data = func(uri)
+    data = [i for i in func(uri) if i["legalities"]["commander"] == "legal"]
     write_to_json(data, filename)
     return 1
 
@@ -88,14 +89,14 @@ def get_data_if_none_exists(filename, uri, func, force=False):
 def fetch(force=False):
     uri = get_download_uri()
     filename = "oracle-cards"
-    clear_old_files(force)
+    clear_old_files(filename, force)
     get_data_if_none_exists(filename, uri, get_data, force)
 
 
 def fetch_all_commanders(force=False):
     uri = "https://api.scryfall.com/cards/search?q=is%3Acommander+legal%3Acommander"
     filename = f"all-commanders"
-    clear_old_files(force)
+    clear_old_files(filename, force)
     get_data_if_none_exists(filename, uri, paginate, force)
 
 
