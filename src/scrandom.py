@@ -69,7 +69,7 @@ async def main():
         if x.name not in nonlands:
             nonlands.append(x.name)
     deck = nonlands + lands
-    safe_commander_name = commander.name.replace(" // ","|").replace(" ","-")
+    safe_commander_name = commander.name.replace(" // ", "|").replace(" ", "-")
     with open(f"{DIRECTORY}/output.txt", "w") as outfile:
         print("Writing to file...")
         outfile.write("\n".join(str(i) for i in deck))

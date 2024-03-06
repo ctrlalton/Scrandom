@@ -10,6 +10,7 @@ CWD = Path.cwd()
 MOD_PATH = Path(__file__).parent
 REL_PATH = "../output/bulk_data"
 DIRECTORY = (MOD_PATH / REL_PATH).resolve()
+TODAY = datetime.today().strftime('%Y%m%d')
 
 
 def get_download_uri():
@@ -29,24 +30,26 @@ def get_data(uri):
 
 
 def write_to_json(file, name):
-    filepath = f"{DIRECTORY}/{name}"
+    filepath = f"{DIRECTORY}/{name}_{TODAY}.json"
     print(f"Saving file to '{filepath}'...")
     with open(filepath, "w") as outfile:
         outfile.write(json.dumps(file))
     print(f"Successfully saved file to '{filepath}'.")
 
+def open_json(filepath):
+    with open(filepath) as infile:
+        return json.load(infile)
 
 def ensure_dir_exists():
     if not os.path.isdir(DIRECTORY):
         os.makedirs(DIRECTORY)
 
-def clear_directory(filename, force=False):
+
+def clear_old_files(force=False):
     ensure_dir_exists()
     with os.scandir(DIRECTORY) as it:
         for entry in it:
-            if entry.name.split("_")[0] != filename.split("_")[0]:
-                continue
-            if entry.name != filename or force:
+            if force or entry.name.split("_")[1].split(".")[0] != TODAY:
                 os.remove(entry)
 
 
@@ -67,8 +70,8 @@ def paginate(uri):
 
 
 def get_data_if_none_exists(filename, uri, func, force=False):
-    if filename in [i.name for i in os.scandir(DIRECTORY)] and force is False:
-        print("Up-to-date data already exists. Download was skipped.")
+    if filename in [i.name.split("_")[0] for i in os.scandir(DIRECTORY)] and force is False:
+        print(f"Up-to-date data already exists. ({filename})")
         return 0
     data = func(uri)
     write_to_json(data, filename)
@@ -77,21 +80,21 @@ def get_data_if_none_exists(filename, uri, func, force=False):
 
 def fetch(force=False):
     uri = get_download_uri()
-    filename = f"oracle-cards_{datetime.today().strftime('%Y%m%d')}.json"
-    clear_directory(filename, force)
+    filename = "oracle-cards"
+    clear_old_files(force)
     get_data_if_none_exists(filename, uri, get_data, force)
 
 
 def fetch_all_commanders(force=False):
     uri = "https://api.scryfall.com/cards/search?q=is%3Acommander+legal%3Acommander"
-    filename = f"all-commanders_{datetime.today().strftime('%Y%m%d')}.json"
-    clear_directory(filename, force)
+    filename = f"all-commanders"
+    clear_old_files(force)
     get_data_if_none_exists(filename, uri, paginate, force)
 
 
 def main():
     fetch()
-    fetch_all_commanders(force=True)
+    fetch_all_commanders()
 
 
 if __name__ == "__main__":
