@@ -1,4 +1,5 @@
 *.json
 *.txt
+!requirements.txt
 test.*
 **/__pycache__/
