@@ -176,7 +176,7 @@ def generate_commander_deck(color_identity=None, silent=False):
     cards = get_color_set(color_identity)
     nonlands = [commander["name"]]
     lands = []
-    while len(nonlands) < 68:
+    while len(nonlands) < 62:
         card = get_random_card(cards, silent=True)
         if "Land" in card["type_line"] and card not in lands:
             lands.append(card["name"])
