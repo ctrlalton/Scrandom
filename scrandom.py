@@ -11,7 +11,7 @@ TYPE = "oracle-cards"
 TODAY = datetime.today().strftime("%Y%m%d")
 
 MOD_PATH = Path(__file__).parent
-REL_PATH = "output/bulk_data"
+REL_PATH = "../output/bulk_data"
 DIRECTORY = (MOD_PATH / REL_PATH).resolve()
 
 

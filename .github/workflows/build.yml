@@ -1,0 +1,32 @@
+---
+  name: "pre-release"
+  
+  on:
+    push:
+  
+  jobs:
+    release:
+      name: "Release"
+      runs-on: "windows-latest"
+  
+      steps:
+        - name: Checkout
+          uses: actions/checkout@latest
+        - name: Install Python
+          uses: actions/setup-python@latest
+          with:
+            python-version: '3.11'
+        - name: Install requirements
+          run: |
+            pip install -r requirements.txt
+        - name: Run pyinstaller
+          run: |
+            pyinstaller scrandom.spec
+  
+        - uses: "marvinpinto/action-automatic-releases@latest"
+          with:
+            repo_token: "${{ secrets.GITHUB_TOKEN }}"
+            automatic_release_tag: "latest"
+            title: "Build"
+            files: |
+              dist/scrandom/
