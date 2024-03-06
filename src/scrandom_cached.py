@@ -114,10 +114,14 @@ def generate_commander_deck():
     return deck
 
 
-def save_deckfile(deck, name):
+def create_deckstring(deck):
+    return "\n".join(str(i) for i in deck)
+
+
+def save_deckfile(deckstring, name):
     with open(f"{DIRECTORY}/../{name}.txt", "w") as outfile:
         print("Writing to file...")
-        outfile.write("\n".join(str(i) for i in deck))
+        outfile.write(deckstring)
         print("Successfully written to file.")
 
 
@@ -128,7 +132,7 @@ def main():
     # initialize_all_color_sets()
     deck = generate_commander_deck()
     deck_name = clean_name(deck[0])
-    save_deckfile(deck, deck_name)
+    save_deckfile(create_deckstring(deck), deck_name)
 
 
 if __name__ == "__main__":
