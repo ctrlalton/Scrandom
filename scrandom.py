@@ -1,13 +1,14 @@
-import requests
 import json
 import os
+import random
+import re
 import sys
+import time
+import urllib.parse
 from datetime import datetime
 from pathlib import Path
-import time
-import re
-import random
-import urllib.parse
+
+import requests
 
 if getattr(sys, "frozen", False):
     application_path = os.path.dirname(sys.executable)
@@ -78,7 +79,7 @@ def paginate(uri):
 
     while True:
         all_data += [i for i in file["data"]]
-        if not "next_page" in dict.keys(file):
+        if "next_page" not in dict.keys(file):
             break
         time.sleep(0.1)
         file = get_data(file["next_page"])
@@ -104,25 +105,18 @@ def fetch_oracle_cards():
     filename = "oracle-cards"
     if not does_data_exist(filename):
         uri = get_download_uri()
-        data = [
-            i
-            for i in get_data(uri)
-            if is_card_allowable(i)
-        ]
+        data = [i for i in get_data(uri) if is_card_allowable(i)]
         write_to_json(data, filename)
     else:
         print(f"Data already exists: {filename}")
 
 
 def fetch_all_commanders():
-    filename = f"all-commanders"
+    filename = "all-commanders"
     if not does_data_exist(filename):
-        uri = "https://api.scryfall.com/cards/search?q=is%3Acommander+legal%3Acommander"
-        data = [
-            i
-            for i in paginate(uri)
-            if is_card_allowable(i)
-        ]
+        query = "q=is%3Acommander+legal%3Acommander"
+        uri = "https://api.scryfall.com/cards/search?" + query
+        data = [i for i in paginate(uri) if is_card_allowable(i)]
         write_to_json(data, filename)
     else:
         print(f"Data already exists: {filename}")
@@ -153,22 +147,28 @@ def deck_add_message(card_type, name):
     print(f'{card_type}:\tAdding "{name}" to your deck...'.expandtabs(25))
 
 
-def get_random_commander(color_identity=None):
+def equal_color_id(card, match):
+    return set(card["color_identity"]) == set(match)
+
+
+def within_color_id(card, match):
+    return set(card["color_identity"]) <= set(match)
+
+
+def get_random_commander(color_id=None):
     filename = get_file_name("all-commanders")
     filepath = f"{DIRECTORY}/{filename}"
-    commanders = open_json(filepath)
-    if color_identity is not None:
-        commanders = [
-            i for i in commanders if set(i["color_identity"]) == set(color_identity)
-        ]
-    return random.choice(commanders)
+    cards = open_json(filepath)
+    if color_id is not None:
+        cards = [i for i in cards if equal_color_id(i, color_id)]
+    return random.choice(cards)
 
 
-def get_color_set(color_identity):
+def get_color_set(color_id):
     filename = get_file_name("oracle-cards")
     filepath = f"{DIRECTORY}/{filename}"
     cards = open_json(filepath)
-    cards = [i for i in cards if set(i["color_identity"]) <= set(color_identity)]
+    cards = [i for i in cards if within_color_id(i, color_id)]
     return cards
 
 
@@ -176,11 +176,11 @@ def get_random_card(cards):
     return random.choice(cards)
 
 
-def generate_commander_deck(color_identity=None, commander=None, silent=False):
+def generate_commander_deck(color_id=None, commander=None, silent=False):
     if commander is None:
-        commander = get_random_commander(color_identity=color_identity)
-    color_identity = commander["color_identity"]
-    cards = get_color_set(color_identity)
+        commander = get_random_commander(color_id=color_id)
+    color_id = commander["color_identity"]
+    cards = get_color_set(color_id)
     nonlands = [commander["name"]]
     lands = []
     while len(nonlands) < 62:
@@ -228,7 +228,7 @@ def main():
     deck = generate_commander_deck(silent=True)
     deck_name = clean_name(deck[0])
     save_deckfile(deck, deck_name)
-    # print(create_moxfield_link(deck)
+    # print(create_moxfield_link(deck))
 
 
 if __name__ == "__main__":
