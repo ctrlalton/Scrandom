@@ -7,8 +7,9 @@ from pathlib import Path
 import time
 import re
 import random
+import urllib.parse
 
-if getattr(sys, 'frozen', False):
+if getattr(sys, "frozen", False):
     application_path = os.path.dirname(sys.executable)
 else:
     application_path = os.path.dirname(os.path.abspath(__file__))
@@ -32,15 +33,15 @@ def get_download_uri():
 def get_data(uri):
     print(f"Retrieving data from '{uri}'...")
     x = requests.get(uri).json()
-    print(f"Successfully downloaded file at '{uri}'.")
+    print(f"Successfully fetched data from '{uri}'.")
     return x
 
 
-def write_to_json(file, name):
+def write_to_json(data, name):
     filepath = f"{DIRECTORY}/{name}_{TODAY}.json"
     print(f"Saving file to '{filepath}'...")
     with open(filepath, "w") as outfile:
-        outfile.write(json.dumps(file))
+        outfile.write(json.dumps(data))
     print(f"Successfully saved file to '{filepath}'.")
 
 
@@ -54,14 +55,19 @@ def ensure_dir_exists():
         os.makedirs(DIRECTORY)
 
 
-def clear_old_files(filename, force=False):
+def is_file_old(file):
+    return os.path.splitext(file.name)[0].split("_")[1] != TODAY
+
+
+def clear_old_files(force=False):
     ensure_dir_exists()
     with os.scandir(DIRECTORY) as it:
         for entry in it:
-            if entry.name != "README.md" and (
-                entry.name.split("_")[0] == filename
-                and (force or entry.name.split("_")[1].split(".")[0] != TODAY)
-            ):
+            if force:
+                print(f"Force-removing {entry.name}")
+                os.remove(entry)
+            if is_file_old(entry):
+                print(f"Removing old {entry.name}")
                 os.remove(entry)
 
 
@@ -81,30 +87,45 @@ def paginate(uri):
     return all_data
 
 
-def get_data_if_none_exists(filename, uri, func, force=False):
-    if (
-        filename in [i.name.split("_")[0] for i in os.scandir(DIRECTORY)]
-        and force is False
-    ):
-        print(f"Up-to-date data already exists. ({filename})")
-        return 0
-    data = [i for i in func(uri) if i["legalities"]["commander"] == "legal" and ("Attraction" not in i["type_line"] and "Stickers" not in i["type_line"])]
-    write_to_json(data, filename)
-    return 1
+def does_data_exist(filename):
+    return filename in [i.name.split("_")[0] for i in os.scandir(DIRECTORY)]
 
 
-def fetch(force=False):
-    uri = get_download_uri()
+def is_card_allowable(card):
+    filters = [
+        card["legalities"]["commander"] == "legal",
+        "Attraction" not in card["type_line"],
+        "Stickers" not in card["type_line"],
+    ]
+    return all(filters)
+
+
+def fetch_oracle_cards():
     filename = "oracle-cards"
-    clear_old_files(filename, force)
-    get_data_if_none_exists(filename, uri, get_data, force)
+    if not does_data_exist(filename):
+        uri = get_download_uri()
+        data = [
+            i
+            for i in get_data(uri)
+            if is_card_allowable(i)
+        ]
+        write_to_json(data, filename)
+    else:
+        print(f"Data already exists: {filename}")
 
 
-def fetch_all_commanders(force=False):
-    uri = "https://api.scryfall.com/cards/search?q=is%3Acommander+legal%3Acommander"
+def fetch_all_commanders():
     filename = f"all-commanders"
-    clear_old_files(filename, force)
-    get_data_if_none_exists(filename, uri, paginate, force)
+    if not does_data_exist(filename):
+        uri = "https://api.scryfall.com/cards/search?q=is%3Acommander+legal%3Acommander"
+        data = [
+            i
+            for i in paginate(uri)
+            if is_card_allowable(i)
+        ]
+        write_to_json(data, filename)
+    else:
+        print(f"Data already exists: {filename}")
 
 
 def get_file_name(name):
@@ -132,7 +153,7 @@ def deck_add_message(card_type, name):
     print(f'{card_type}:\tAdding "{name}" to your deck...'.expandtabs(25))
 
 
-def get_random_commander(color_identity=None, silent=False):
+def get_random_commander(color_identity=None):
     filename = get_file_name("all-commanders")
     filepath = f"{DIRECTORY}/{filename}"
     commanders = open_json(filepath)
@@ -140,46 +161,38 @@ def get_random_commander(color_identity=None, silent=False):
         commanders = [
             i for i in commanders if set(i["color_identity"]) == set(color_identity)
         ]
-    x = random.choice(commanders)
-    if not silent:
-        deck_add_message("COMMANDER", x["name"])
-    return x
+    return random.choice(commanders)
 
 
 def get_color_set(color_identity):
     filename = get_file_name("oracle-cards")
     filepath = f"{DIRECTORY}/{filename}"
     cards = open_json(filepath)
-    cards = [
-        i
-        for i in cards
-        if set(i["color_identity"]) <= set(color_identity)
-        and i["legalities"]["commander"] == "legal"
-    ]
+    cards = [i for i in cards if set(i["color_identity"]) <= set(color_identity)]
     return cards
 
 
-def get_random_card(cards, silent=False):
-    x = random.choice(cards)
-    typex = x["type_line"].split("—")[0].strip()
-    if not silent:
-        deck_add_message(typex, x["name"])
-    return x
+def get_random_card(cards):
+    return random.choice(cards)
 
 
-def generate_commander_deck(color_identity=None, silent=False):
-    commander = get_random_commander(color_identity=color_identity)
+def generate_commander_deck(color_identity=None, commander=None, silent=False):
+    if commander is None:
+        commander = get_random_commander(color_identity=color_identity)
     color_identity = commander["color_identity"]
     cards = get_color_set(color_identity)
     nonlands = [commander["name"]]
     lands = []
     while len(nonlands) < 62:
-        card = get_random_card(cards, silent=True)
-        if "Land" in card["type_line"] and card not in lands:
+        card = get_random_card(cards)
+        if card["name"] in nonlands or card["name"] in lands:
+            continue
+        if not silent:
+            deck_add_message(card["type_line"], card["name"])
+        if "Land" in card["type_line"]:
             lands.append(card["name"])
             continue
-        if card not in nonlands:
-            nonlands.append(card["name"])
+        nonlands.append(card["name"])
     deck = nonlands + lands
     return deck
 
@@ -188,8 +201,15 @@ def create_deckstring(deck):
     return "\n".join(str(i) for i in deck)
 
 
-def save_deckfile(deckstring, name):
+def create_moxfield_link(deck):
+    link = "https://www.moxfield.com/import?c="
+    link += urllib.parse.quote_plus(create_deckstring(deck))
+    return link
+
+
+def save_deckfile(deck, name):
     filepath = (DIRECTORY / f"../{name}.txt").resolve()
+    deckstring = create_deckstring(deck)
     with open(filepath, "w") as outfile:
         print(f"Writing to {filepath}...")
         outfile.write(deckstring)
@@ -197,17 +217,18 @@ def save_deckfile(deckstring, name):
 
 
 def initialize(force=False):
-    fetch(force)
-    fetch_all_commanders(force)
+    clear_old_files(force)
+    fetch_oracle_cards()
+    fetch_all_commanders()
 
 
 def main():
     """The main entrypoint to the program."""
-    print(DIRECTORY)
     initialize()
-    deck = generate_commander_deck()
+    deck = generate_commander_deck(silent=True)
     deck_name = clean_name(deck[0])
-    save_deckfile(create_deckstring(deck), deck_name)
+    save_deckfile(deck, deck_name)
+    # print(create_moxfield_link(deck)
 
 
 if __name__ == "__main__":
