@@ -15,8 +15,6 @@ if getattr(sys, "frozen", False):
 else:
     application_path = os.path.dirname(os.path.abspath(__file__))
 application_path = Path(application_path)
-TYPE = "oracle-cards"
-TODAY = datetime.today().strftime("%Y%m%d")
 
 REL_PATH = "output/bulk_data"
 DIRECTORY = (application_path / REL_PATH).resolve()
@@ -24,9 +22,8 @@ DIRECTORY = (application_path / REL_PATH).resolve()
 
 def get_download_uri():
     print("Fetching download URI...")
-    x = requests.get(f"https://api.scryfall.com/bulk-data/{TYPE}").json()[
-        "download_uri"
-    ]
+    perma = "https://api.scryfall.com/bulk-data/oracle-cards"
+    x = requests.get(perma).json()["download_uri"]
     print(f"Successfully fetched download URI: '{x}'")
     return x
 
@@ -39,7 +36,8 @@ def get_data(uri):
 
 
 def write_to_json(data, name):
-    filepath = f"{DIRECTORY}/{name}_{TODAY}.json"
+    today = datetime.today().strftime("%Y%m%d")
+    filepath = f"{DIRECTORY}/{name}_{today}.json"
     print(f"Saving file to '{filepath}'...")
     with open(filepath, "w") as outfile:
         outfile.write(json.dumps(data))
@@ -57,7 +55,8 @@ def ensure_dir_exists():
 
 
 def is_file_old(file):
-    return os.path.splitext(file.name)[0].split("_")[1] != TODAY
+    today = datetime.today().strftime("%Y%m%d")
+    return os.path.splitext(file.name)[0].split("_")[1] != today
 
 
 def clear_old_files(force=False):
@@ -176,9 +175,10 @@ def get_random_card(cards):
     return random.choice(cards)
 
 
-def generate_commander_deck(color_id=None, commander=None, silent=False):
+def generate_commander_deck(color_id=None, commander=None, silent=True):
     if commander is None:
         commander = get_random_commander(color_id=color_id)
+    deck_add_message("Commander", commander["name"])
     color_id = commander["color_identity"]
     cards = get_color_set(color_id)
     nonlands = [commander["name"]]
@@ -188,7 +188,8 @@ def generate_commander_deck(color_id=None, commander=None, silent=False):
         if card["name"] in nonlands or card["name"] in lands:
             continue
         if not silent:
-            deck_add_message(card["type_line"], card["name"])
+            short_type = card["type_line"].split("—")[0].strip()
+            deck_add_message(short_type, card["name"])
         if "Land" in card["type_line"]:
             lands.append(card["name"])
             continue
