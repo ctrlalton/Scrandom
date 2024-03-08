@@ -3,3 +3,5 @@
 !requirements.txt
 test.*
 **/__pycache__/
+build/
+dist/
