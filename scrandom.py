@@ -118,6 +118,8 @@ def clear_old_files(force=False):
     ensure_dir_exists()
     with os.scandir(BULK_DATA) as it:
         for entry in it:
+            if entry.name == "README.md":
+                continue
             if force:
                 print(f"Force-removing {entry.name}")
                 os.remove(entry)
