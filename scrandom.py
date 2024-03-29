@@ -22,7 +22,7 @@ BULK_DATA = (OUTPUT / "bulk_data").resolve()
 class Card:
     """Store card info from scryfall"""
 
-    def __init__(self, data: list):
+    def __init__(self, data: dict):
         self.data = data
         self.cid = set(data["color_identity"])
 
@@ -39,7 +39,8 @@ class Deck:
     def __init__(self, data=None):
         if data is None:
             self.data = []
-        self.data = data
+        else:
+            self.data = data
 
     def _is_valid_operand(self, other):
         return isinstance(other, (Deck, Card))
@@ -287,6 +288,7 @@ def initialize(force=False):
 def main():
     """The main entrypoint to the program."""
     initialize()
+    # card = get_random_commander()
     deck = generate_commander_deck()
     deck_name = clean_name(deck[0])
     save_deckfile(deck, deck_name)
