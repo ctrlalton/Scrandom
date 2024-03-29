@@ -17,6 +17,7 @@ else:
     application_path = os.path.dirname(os.path.abspath(__file__))
 OUTPUT = (Path(application_path) / "output/").resolve()
 BULK_DATA = (OUTPUT / "bulk_data").resolve()
+NONLAND_COUNT = 62
 
 
 class Card:
@@ -249,7 +250,7 @@ def generate_commander_deck(
     cards = get_color_set(commander.cid)
     nonlands = Deck([commander["name"]])
     lands = Deck()
-    while len(nonlands) < 62:
+    while len(nonlands) < NONLAND_COUNT:
         card = get_random_card(cards)
         if card in nonlands + lands:
             continue
