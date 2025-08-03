@@ -177,7 +177,7 @@ def fetch_all_commanders():
     """Download all card data for legal commanders"""
     filename = "all-commanders"
     if not does_data_exist(filename):
-        query = "q=is%3Acommander+legal%3Acommander"
+        query = "q=is%3Acommander+legal%3Acommander+t%3'creature'"
         uri = "https://api.scryfall.com/cards/search?" + query
         data = [i for i in paginate(uri) if is_card_allowable(i)]
         write_to_json(data, filename)
